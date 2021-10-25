@@ -97,9 +97,10 @@ int main(int argc, char **argv) {
         MPI_Offset temp = 0;
         MPI_File_get_size(fh_in, &temp);
         N = int(temp) / 4;
+        printf("Master: Sending sequence size to MPI-Processes\n");
     }
     MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    //printf("rank: %d, N: %d, P: %d\n", rank, N, P);
+    printf("rank: %d, N: %d, P: %d\n", rank, N, P);
 
     if (N % P != 0 || P * P > N) {
         printf("Rank: %d is ending on %s data does not meet requirements\n", rank, host);
@@ -127,12 +128,12 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         int step = setStep((N / P), P);
-        //printf("step: %d\n", step);
+        printf("step: %d\n", step);
         int s = 0;
         for (int i = 0; s < P - 1; i++) {
             if ((i + 1) % step == 0) {
                 par[s] = data[i];
-                //printf("par[%d]: %d\n", s, par[s]);
+                printf("par[%d]: %d\n", s, par[s]);
                 s++;
             }
         }
@@ -165,23 +166,23 @@ int main(int argc, char **argv) {
         }
     }
 
-/*
-  //print out debuging data
-printf("bucket size: %d\n", (P/2 +1)*(N/P));
 
-  int l = 0;
-  printf("Rank: %d: ", rank);
-  for(int i = 0; i < N/P || l < P-1; i++) {
+    //print out debugging data
+    printf("bucket size: %d\n", (P / 2 + 1) * (N / P));
 
-    while(l < P-1 && bond[l] == i-1) {
-      printf(" | ");
-      l++;
+    int l = 0;
+    printf("Rank: %d: ", rank);
+    for (int i = 0; i < N / P || l < P - 1; i++) {
+
+        while (l < P - 1 && bond[l] == i - 1) {
+            printf(" | ");
+            l++;
+        }
+        if (i < N / P)
+            printf("%d ", data[i]);
     }
-    if(i < N/P)
-      printf("%d ", data[i]);
-  }
-  printf("\n");
-*/
+    printf("\n");
+
 
     //Step 6
 
@@ -206,7 +207,7 @@ printf("bucket size: %d\n", (P/2 +1)*(N/P));
 
         total += k;
 
-        //printf("Sending: %d from rank: %d\n", k, rank);
+        printf("Sending: %d from rank: %d\n", k, rank);
 
 
         //send the number of elements (k) to the respective thread (i)
@@ -240,7 +241,8 @@ printf("bucket size: %d\n", (P/2 +1)*(N/P));
             //transfer the new items into the myBucket array
             for (int t = 0; t < j; t++) {
                 myBucket[current] = receive[t];
-                //printf("adding: rank= %d, myBucket=%d, received=%d, current=%d\n", rank, myBucket[current], receive[t], current);
+                printf("adding: rank= %d, myBucket=%d, received=%d, current=%d\n", rank, myBucket[current], receive[t],
+                       current);
                 current++;
             }
             free(receive);
@@ -275,11 +277,11 @@ printf("bucket size: %d\n", (P/2 +1)*(N/P));
             MPI_Send(&currentOffset, 1, MPI_INT, rank + 1, TAG, MPI_COMM_WORLD);
     }
 
-/*
-  for(int i = 0; i < current; i++) {
-    printf("rank=%d: %d\n", rank, myBucket[i]);
-  }
-*/
+
+    for (int i = 0; i < current; i++) {
+        printf("rank=%d: %d\n", rank, myBucket[i]);
+    }
+
 
     printf("Rank: %d is ending on %s\n", rank, host);
     free(myBucket);
